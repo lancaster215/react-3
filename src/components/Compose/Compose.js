@@ -21,11 +21,11 @@ export default class Compose extends Component {
   }
 
   createPost() {
-    const { text } = this.state;
-    const { createPostFn } = this.props;
+    const { text } = this.state
+    const { createFunc } = this.props
 
-    createPostFn( text );
-    this.setState({ text: '' });
+    createFunc( text );
+    this.setState({ text: ''})
   }
 
   render() {
@@ -38,7 +38,7 @@ export default class Compose extends Component {
           <div className="Compose__profile-picture">
             <MdPersonOutline />
           </div>
-          <Compose createPostFn={this.createPost} />
+
           {/* This is where you type the message for your new post */}
           <input
             className="Compose__input"
