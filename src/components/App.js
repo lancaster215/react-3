@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+
 import './App.css';
 
 import Header from './Header/Header';
 import Compose from './Compose/Compose';
 import Post from './Post/Post';
 
-axios.defaults.headers.common['Content-Type']='application/json';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 class App extends Component {
   constructor() {
     super();
@@ -14,32 +16,23 @@ class App extends Component {
     this.state = {
       posts: [],
     };
-
-    this.updatePost = this.updatePost.bind(this);
-    this.deletePost = this.deletePost.bind(this);
-    this.createPost = this.createPost.bind(this);
   }
 
   componentDidMount() {
     axios
-    .get('http://localhost:9090/posts')
-    .then(response => 
-      this.setState({
-        posts: response.data
-      })
-    );
+      .get('http://localhost:9090/posts')
+      .then(response => this.setState({ posts: response.data }));
   }
 
-  updatePost(id, text) {
+  updatePost = (id, text) => {
     axios
-    .put(`https://practiceapi.devmountain.com/api/posts/${id}`, { text })
+    .put(`http://localhost:9090/posts/${id}`, { text })
     .then(response => {
       const updatedPost = response.data;
-
-      const updatedPosts = this.state.posts.map(post=>{
-        if(post.id === updatedPost.id){
-          return { post,...updatedPost }
-        }else{
+      const updatedPosts = this.state.posts.map(post => {
+        if (post.id === updatedPost.id) {
+          return { post, ...updatedPost };
+        } else {
           return post;
         }
       });
@@ -47,22 +40,33 @@ class App extends Component {
     });
   }
 
-  deletePost(id) {
-    axios
-      .delete(`https://practiceapi.devmountain.com/api/posts?id=${id}`)
-      .then(results => {
-        this.setState({ posts: results.data });
+  deletePost = (id) => {
+    axios.delete(`http://localhost:9090/posts/${id}`).then(response => {
+      this.setState({
+        posts: this.state.posts.filter(post => post.id !== id),
+      });
     });
   }
 
-  createPost(text) {
+  createPost = (text) => {
+    const date = new Date().toLocaleString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
     axios
-    .post('https://practiceapi.devmountain.com/api/posts', {text})
-    .then(res =>
-      this.setState({
-        posts: res.data
-      })  
-    );
+      .post('http://localhost:9090/posts', { text, date })
+      .then(response =>
+        this.setState({ posts: [response.data, ...this.state.posts] })
+      );
+  }
+
+  searchText = (text) =>{
+    axios
+    .get(`http://localhost:9090/posts?q=${text}`)
+    .then(response => this.setState({ posts: [...response.data] }))
+    .catch(error => console.log(error));
   }
 
   render() {
@@ -70,20 +74,20 @@ class App extends Component {
 
     return (
       <div className="App__parent">
-        <Header />
+        <Header searchTextFn={this.searchText}/>
 
         <section className="App__content">
-          <Compose createFunc={this.createPost}/>
-            {posts.map(post =>
-                <Post 
-                  key={post.id} 
-                  text={post.text}
-                  date={post.date}
-                  // createPostFn={this.createPost}
-                  updatePostFn={this.updatePost}
-                  deletePostFn={this.deletePost}
-                />
-            )}
+          <Compose createPostFn={this.createPost} />
+          {posts.map(post => (
+            <Post
+              key={post.id}
+              id={post.id}
+              text={post.text}
+              date={post.date}
+              updatePostFn={this.updatePost}
+              deletePostFn={this.deletePost}
+            />
+          ))}
         </section>
       </div>
     );
